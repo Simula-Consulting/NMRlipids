@@ -1,0 +1,8 @@
+.DS_Store
+Databank/
+__pycache__/
+#nmrlipids/
+#poetry.lock
+#pyproject.toml
+#tests/
+trash.py
