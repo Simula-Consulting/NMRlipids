@@ -4,13 +4,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel
+from matplotlib.axes import Axes
+from typing import Any, Optional
 
-def getFormFactorAndTotalDensityPair(system):
+
+def getFormFactorAndTotalDensityPair(system: dict[str, Any]) -> tuple[Optional[list[Any]], Optional[list[Any]]]:
     """
-    
     Returns form factor and total density profiles of the simulation
     
-    :param system: NMRlipids databank dictionary describing the simulation.
+    :param system: NMRlipids databank dictionary describing the simulation
     
     :return: form factor (FFsim) and total density (TDsim) of the simulation
     """
@@ -30,47 +32,52 @@ def getFormFactorAndTotalDensityPair(system):
     return FFsim, TDsim
 
 
-def plot_densities(all_td_x, all_td_y, title='All total density profiles', lines=[]):
+def plot_total_densities_to_ax(ax: Axes, all_td_x: list[float], all_td_y: list[float], lines: list[float] = []) -> Axes:
     """
+    Plot all total density profiles to ax
 
-    Plot all total density profiles
+    :param ax: Axes object to plot on.
+    :param all_td_x: List of lists: x coordinates for each total density profile
+    :param all_td_y: List of lists: y coordinates for each total density profile
+    :param lines: List of x values to plot as vertical lines
+
+    :return: ax object with total densities (and lines) plotted
     """
-    plt.figure(figsize=(6, 6))
     if isinstance(all_td_y, list):
         for x_vector, y_vector in zip(all_td_x, all_td_y):
-            plt.plot(x_vector, y_vector)
+            ax.plot(x_vector, y_vector)
     elif isinstance(all_td_y, pd.DataFrame):
-        for index, row in all_td_y.iterrows():
-            plt.plot(all_td_x, row.to_list())
-    for line_value in lines:
-        plt.axvline(line_value, color='k', linestyle='solid')
-    plt.title(title)
-    plt.tight_layout()
-    plt.show()
+        for _, row in all_td_y.iterrows():
+            ax.plot(all_td_x, row.to_list())
+    for value in lines:
+        ax.axvline(value, color='k', linestyle='solid')
+    return ax
 
 
-def plot_form_factors(sim_FF_df):
-    # Plot all form factors
-    plt.figure(figsize=(12, 6))
+def plot_form_factors_to_ax(ax: Axes, sim_FF_df: pd.DataFrame) -> Axes:
+    """
+    Plot all form factor profiles to ax
+
+    :param ax: Axes object to plot on
+    :param sim_FF_df: pd.DataFrame with form factors as rows
+    
+    :return: ax object with form factors plotted
+    """
     for index, row in sim_FF_df.iterrows():
-        plt.plot(row.to_list())
-    plt.title('All form factor profiles')
-    plt.tight_layout()
-    plt.show()
+        ax.plot(row.to_list())
+    return ax
 
 
-def extrapolate_X(x_vector, length_of_padded_data, x_interval_start, x_interval_end):
+def extrapolate_X(x_vector: np.ndarray, length_of_padded_data: int, x_interval_start: float, x_interval_end: float) -> np.ndarray:
     """
+    Extrapolates total density x values to match desired x range and dimensionality
     
-    Returns form factor and total density profiles of the simulation
+    :param x_vector: Original total density x values
+    :param length_of_padded_data: Desired length of padded data
+    :param x_interval_start: Lower end of range for the homogenized data
+    :param x_interval_end: Lower end of range for the homogenized data
     
-    :param system: NMRlipids databank dictionary describing the simulation.
-    
-    :return: form factor (FFsim) and total density (TDsim) of the simulation
-    """
-    """
-    Extrapolates 
-
+    :return: padded x vector
     """
     padding_length = max(0, length_of_padded_data - len(x_vector))
     first_padding_length = padding_length // 2
@@ -84,25 +91,23 @@ def extrapolate_X(x_vector, length_of_padded_data, x_interval_start, x_interval_
         # If narrower, extrapolate in the x direction by replicating the y values at the ends
         padding_start = np.linspace(x_interval_start, x_min, num=max(0, first_padding_length), endpoint=False)
         padding_end = np.linspace(x_max, x_interval_end, num=max(0, last_padding_length), endpoint=False)
-    else: 
+    elif x_min < x_interval_start and x_max > x_interval_end:
         # If wider, pad at the ends without extrapolating to make dimensions equal
         padding_start = np.repeat(x_min, first_padding_length)
         padding_end = np.repeat(x_max, last_padding_length)
+    else: 
+        raise NotImplementedError
     return np.concatenate([padding_start, x_vector, padding_end])
 
 
-def extrapolate_Y(y_vector, length_of_padded_data):
+def extrapolate_Y(y_vector: np.ndarray, length_of_padded_data: int) -> np.ndarray:
     """
+    Extrapolates total density y values by repeating the y values at the ends of the observation window
     
-    Returns form factor and total density profiles of the simulation
-    
-    :param system: NMRlipids databank dictionary describing the simulation.
-    
-    :return: form factor (FFsim) and total density (TDsim) of the simulation
-    """
-    """
-    The y values at the beginning and end are copied and used to extrapolate
-
+    :param y_vector: Original total density y values
+    :param length_of_padded_data: Desired length of padded data
+        
+    :return: padded y vector
     """
     padding_length = max(0, length_of_padded_data - len(y_vector))
     first_padding_length = padding_length // 2
@@ -116,36 +121,31 @@ def extrapolate_Y(y_vector, length_of_padded_data):
     return np.concatenate([padding_start, y_vector, padding_end])
 
 
-def interpolate_with_GPR(rescaled_all_td_x, rescaled_all_td_y, uniform_x_range):
+def interpolate_with_GPR(rescaled_all_td_x: list[np.ndarray], rescaled_all_td_y: list[np.ndarray], uniform_x_range: np.ndarray) -> list[np.ndarray]:
+    """
+    Fits a Gaussian process regression to the observed points, then predicts values on the  uniform grid between the observations
+
+    :param rescaled_all_x: List of total density x values (np.ndarray) for all cases
+    :param rescaled_all_y: List of total density y values (np.ndarray) for all cases
+    :param uniform_x_range: X coordinates on which the y values will be predicted for all patients
+    
+    :return: List og np.ndarrays, where each np.ndarray contains the total density y values predicted by on uniform x range for one patient
+    """
     # Create and fit Gaussian process regressor
     kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(0.1, (1e-2, 1e2))
     gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=0)
     return [gp.fit(x_vector.reshape(-1, 1), y_vector).predict(uniform_x_range) for x_vector, y_vector in zip(rescaled_all_td_x, rescaled_all_td_y)]
 
 
-"""
-def plot_gpr_fits():
-    # Plot the original data and the predictions
-    plt.figure(figsize=(12, 6))
-
-    # Plot the function, the prediction and the 95% confidence interval
-    plt.plot(uniform_x_range, y_pred, label='GPR Prediction')
-    plt.fill_between(uniform_x_range.ravel(), y_pred - 1.96 * sigma, y_pred + 1.96 * sigma, alpha=0.5)
-    plt.scatter(x_vector, y_vector, label='Training Points', c='red')
-    plt.show()
-
-    # Set labels and legend
-    plt.xlabel('X values')
-    plt.ylabel('Predicted Y values')
-    plt.legend()
-    plt.show()
-"""
-
-
-def split_train_and_test(sim_FF_df, sim_TD_y_df, rng):
+def split_train_and_test(sim_FF_df: pd.DataFrame, sim_TD_y_df: pd.DataFrame, rng: np.random.Generator) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
+    Split FF (input) and TD (output) pairs into train and test input and output pairs
+
+    :param sim_FF_df: Data frame containing form factors
+    :param sim_TD_y_df: Data frame containing total density profiles in the same order as sim_FF_df
+    :param rng: random number generator created and seeded at the beginning of the main script
     
-    :return: 
+    :return: train_input (FF), train_output (TD), test_input (FF), test_output (TD)
     """
     N_total = sim_FF_df.shape[0]
     N_train = int(round(0.8*N_total,0))
@@ -162,20 +162,16 @@ def split_train_and_test(sim_FF_df, sim_TD_y_df, rng):
     return train_input, train_output, test_input, test_output 
 
 
-def plot_training_trajectory(history):
-    plt.plot(history.history['loss'], color = 'green', label = 'Training loss')
-    plt.plot(history.history['val_loss'], color = 'orange', label = 'Validation loss')
-    plt.legend()
-    plt.show()
+def plot_training_trajectory(ax: Axes, history: object) -> Axes:
+    """
+    Plot the training trajectory
 
-
-# The following functions already exist: 
-#
-# def plotSimulation(ID, lipid):
-#    """
-#    Creates plots of form factor and C-H bond order parameters for the selected ``lipid`` from a simulation with the given ``ID`` number. 
-#
-#    :param ID: NMRlipids databank ID number of the simulation
-#    :param lipid: universal molecul name of the lipid
-#
-#    """
+    :param ax: Axes object to plot on
+    :param history: Training history object output from the model fit procedure
+    
+    :return: ax object with training history plotted
+    """
+    ax.plot(history.history['loss'], color = 'green', label = 'Training loss')
+    ax.plot(history.history['val_loss'], color = 'orange', label = 'Validation loss')
+    ax.legend()
+    return ax
