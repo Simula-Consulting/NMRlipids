@@ -2,7 +2,7 @@
 
 The notebook step by step: 
 * Initialize the NMR lipids databank
-* Gather form factors and total densities in data frames
-* Preprocess the data to deal with missing data and different data dimensions
-* Split pairs of form factors and total densities into a train and a test set
-* Train and evaluate a machine learning model
+* Gather all available form factors and total densities in data frames
+* Preprocess the data to deal with different dimensions due to different experimental setups
+* Split data into a train and a test set
+* Train and evaluate a neural net that predicts total densities from form factors
