@@ -6,7 +6,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel
 from matplotlib.axes import Axes
 from typing import Any, Optional
-
+from pathlib import Path
 
 def getFormFactorAndTotalDensityPair(
     system: dict[str, Any], databankPath: str
@@ -19,8 +19,9 @@ def getFormFactorAndTotalDensityPair(
 
     :return: form factor (FFsim) and total density (TDsim) of the simulation
     """
-    FFpathSIM = f"{databankPath}/Data/Simulations/{system['path']}FormFactor.json"
-    TDpathSIM = f"{databankPath}/Data/Simulations/{system['path']}TotalDensity.json"
+    databankPath = Path(databankPath)
+    FFpathSIM = databankPath / "Data" / "Simulations" / system['path'] / "FormFactor.json"
+    TDpathSIM = databankPath / "Data" / "Simulations" / system['path'] / "TotalDensity.json"
 
     # Load form factor and total density
     try:
