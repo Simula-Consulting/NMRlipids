@@ -76,7 +76,7 @@ def plot_form_factors_to_ax(ax: Axes, sim_FF_df: pd.DataFrame) -> Axes:
 
 def extrapolate_X(
     x_vector: np.ndarray,
-    length_of_padded_data: int,
+    desired_length_of_padded_data: int,
     x_interval_start: float,
     x_interval_end: float,
 ) -> np.ndarray:
@@ -84,13 +84,13 @@ def extrapolate_X(
     Extrapolates total density x values to match desired x range and dimensionality
 
     :param x_vector: Original total density x values
-    :param length_of_padded_data: Desired length of padded data
+    :param desired_length_of_padded_data: Desired length of padded data
     :param x_interval_start: Lower end of range for the homogenized data
     :param x_interval_end: Lower end of range for the homogenized data
 
     :return: padded x vector
     """
-    padding_length = max(0, length_of_padded_data - len(x_vector))
+    padding_length = max(0, desired_length_of_padded_data - len(x_vector))
     first_padding_length = padding_length // 2
     last_padding_length = padding_length - first_padding_length
 
@@ -115,16 +115,16 @@ def extrapolate_X(
     return np.concatenate([padding_start, x_vector, padding_end])
 
 
-def extrapolate_Y(y_vector: np.ndarray, length_of_padded_data: int) -> np.ndarray:
+def extrapolate_Y(y_vector: np.ndarray, desired_length_of_padded_data: int) -> np.ndarray:
     """
     Extrapolates total density y values by repeating the y values at the ends of the observation window
 
     :param y_vector: Original total density y values
-    :param length_of_padded_data: Desired length of padded data
+    :param desired_length_of_padded_data: Desired length of padded data
 
     :return: padded y vector
     """
-    padding_length = max(0, length_of_padded_data - len(y_vector))
+    padding_length = max(0, desired_length_of_padded_data - len(y_vector))
     first_padding_length = padding_length // 2
     last_padding_length = padding_length - first_padding_length
 
