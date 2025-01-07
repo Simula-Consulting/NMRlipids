@@ -21,8 +21,12 @@ def getFormFactorAndTotalDensityPair(
     :return: form factor (FFsim) and total density (TDsim) of the simulation
     """
     databankPath = Path(databankPath)
-    FFpathSIM = databankPath / "Data" / "Simulations" / system['path'] / "FormFactor.json"
-    TDpathSIM = databankPath / "Data" / "Simulations" / system['path'] / "TotalDensity.json"
+    FFpathSIM = (
+        databankPath / "Data" / "Simulations" / system["path"] / "FormFactor.json"
+    )
+    TDpathSIM = (
+        databankPath / "Data" / "Simulations" / system["path"] / "TotalDensity.json"
+    )
 
     # Load form factor and total density
     try:
@@ -38,7 +42,7 @@ def getFormFactorAndTotalDensityPair(
 
 
 def plot_total_densities_to_ax(
-    ax: Axes, all_td_x: list[float], all_td_y: list[float], lines: list[float] = []
+    ax: Axes, all_td_x: list[float], all_td_y: list[float], x_axis_text_td: str, y_axis_text_td: str, lines: list[float] = []
 ) -> Axes:
     """
     Plot all total density profiles to ax
@@ -58,10 +62,12 @@ def plot_total_densities_to_ax(
             ax.plot(all_td_x, row.to_list())
     for value in lines:
         ax.axvline(value, color="k", linestyle="solid")
+    ax.set_xlabel(x_axis_text_td)
+    ax.set_ylabel(y_axis_text_td)
     return ax
 
 
-def plot_form_factors_to_ax(ax: Axes, sim_FF_df: pd.DataFrame) -> Axes:
+def plot_form_factors_to_ax(ax: Axes, sim_FF_df: pd.DataFrame, x_axis_text_ff: str, y_axis_text_ff: str) -> Axes:
     """
     Plot all form factor profiles to ax
 
@@ -72,6 +78,8 @@ def plot_form_factors_to_ax(ax: Axes, sim_FF_df: pd.DataFrame) -> Axes:
     """
     for index, row in sim_FF_df.iterrows():
         ax.plot(row.to_list())
+    ax.set_xlabel(x_axis_text_ff)
+    ax.set_ylabel(y_axis_text_ff)
     return ax
 
 
@@ -116,7 +124,9 @@ def extrapolate_X(
     return np.concatenate([padding_start, x_vector, padding_end])
 
 
-def extrapolate_Y(y_vector: np.ndarray, desired_length_of_padded_data: int) -> np.ndarray:
+def extrapolate_Y(
+    y_vector: np.ndarray, desired_length_of_padded_data: int
+) -> np.ndarray:
     """
     Extrapolates total density y values by repeating the y values at the ends of the observation window
 
@@ -178,32 +188,56 @@ def interpolate_with_GPR(
 
     :return: List of np.ndarrays, where each np.ndarray contains the total density y values predicted by on uniform x range for one patient
     """
-    # Before interpolation, rescale all x and y values to a range of [-0.5, 0.5] 
+    # Before interpolation, rescale all x and y values to a range of [-0.5, 0.5]
     global_min_td_x = min(min(td_x) for td_x in all_td_x)
     global_min_td_y = min(min(td_y) for td_y in all_td_y)
 
     global_max_td_x = max(max(td_x) for td_x in all_td_x)
     global_max_td_y = max(max(td_y) for td_y in all_td_y)
 
-    rescaled_all_td_x = [rescale_to_zero_centered_unit_range(td_x, global_min_td_x, global_max_td_x) for td_x in all_td_x]
-    rescaled_all_td_y = [rescale_to_zero_centered_unit_range(td_y, global_min_td_y, global_max_td_y) for td_y in all_td_y]
+    rescaled_all_td_x = [
+        rescale_to_zero_centered_unit_range(td_x, global_min_td_x, global_max_td_x)
+        for td_x in all_td_x
+    ]
+    rescaled_all_td_y = [
+        rescale_to_zero_centered_unit_range(td_y, global_min_td_y, global_max_td_y)
+        for td_y in all_td_y
+    ]
 
-    rescaled_start = rescale_to_zero_centered_unit_range(uniform_x_range[0], global_min_td_x, global_max_td_x)
-    rescaled_end = rescale_to_zero_centered_unit_range(uniform_x_range[-1], global_min_td_x, global_max_td_x)
-    rescaled_uniform_x_range = np.linspace(rescaled_start, rescaled_end, len(uniform_x_range)).reshape(-1, 1)
+    rescaled_start = rescale_to_zero_centered_unit_range(
+        uniform_x_range[0], global_min_td_x, global_max_td_x
+    )
+    rescaled_end = rescale_to_zero_centered_unit_range(
+        uniform_x_range[-1], global_min_td_x, global_max_td_x
+    )
+    rescaled_uniform_x_range = np.linspace(
+        rescaled_start, rescaled_end, len(uniform_x_range)
+    ).reshape(-1, 1)
 
     # Create and fit Gaussian process regressor
     kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(0.1, (1e-2, 1e2))
     gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=0)
-    interpolated_y = [gp.fit(x_vector.reshape(-1, 1), y_vector).predict(rescaled_uniform_x_range) for x_vector, y_vector in zip(rescaled_all_td_x, rescaled_all_td_y)]
+    interpolated_y = [
+        gp.fit(x_vector.reshape(-1, 1), y_vector).predict(rescaled_uniform_x_range)
+        for x_vector, y_vector in zip(rescaled_all_td_x, rescaled_all_td_y)
+    ]
 
-    # Scale back to original range 
-    standardized_y = [rescale_back_to_true_range(y_vector, global_min_td_y, global_max_td_y) for y_vector in interpolated_y]
-    return standardized_y
+    # Scale back to original range
+    return [
+        rescale_back_to_true_range(y_vector, global_min_td_y, global_max_td_y)
+        for y_vector in interpolated_y
+    ]
+
 
 def split_train_and_test(
-    sim_FF_df: pd.DataFrame, sim_TD_y_df: pd.DataFrame, system_ids: np.ndarray, rng: np.random.Generator, train_proportion: float,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
+    sim_FF_df: pd.DataFrame,
+    sim_TD_y_df: pd.DataFrame,
+    system_ids: np.ndarray,
+    rng: np.random.Generator,
+    train_proportion: float,
+) -> tuple[
+    pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray
+]:
     """
     Split FF (input) and TD (output) pairs into train and test input and output pairs
 
