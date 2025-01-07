@@ -202,8 +202,8 @@ def interpolate_with_GPR(
     return standardized_y
 
 def split_train_and_test(
-    sim_FF_df: pd.DataFrame, sim_TD_y_df: pd.DataFrame, system_ids: list, rng: np.random.Generator, train_proportion: float,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    sim_FF_df: pd.DataFrame, sim_TD_y_df: pd.DataFrame, system_ids: np.ndarray, rng: np.random.Generator, train_proportion: float,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
     """
     Split FF (input) and TD (output) pairs into train and test input and output pairs
 
@@ -220,13 +220,16 @@ def split_train_and_test(
     train_indices = shuffle_indices[0:N_train]
     test_indices = shuffle_indices[N_train:]
 
-    # Select, transpose or not, and convert to numpy float
+    # Use train and test indices to select the right input cases, and convert to numpy float values
     train_input = sim_FF_df.loc[train_indices, :].astype(np.float32)
     train_output = sim_TD_y_df.loc[train_indices, :].astype(np.float32)
+    train_ids = system_ids[train_indices]
+
     test_input = sim_FF_df.loc[test_indices, :].astype(np.float32)
     test_output = sim_TD_y_df.loc[test_indices, :].astype(np.float32)
+    test_ids = system_ids[test_indices]
 
-    return train_input, train_output, test_input, test_output
+    return train_input, train_output, test_input, test_output, train_ids, test_ids
 
 
 def plot_training_trajectory(ax: Axes, history: object) -> Axes:
