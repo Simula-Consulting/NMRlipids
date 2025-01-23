@@ -42,7 +42,12 @@ def getFormFactorAndTotalDensityPair(
 
 
 def plot_total_densities_to_ax(
-    ax: Axes, all_td_x: list[float], all_td_y: list[float], x_axis_text_td: str, y_axis_text_td: str, lines: list[float] = []
+    ax: Axes,
+    all_td_x: list[float],
+    all_td_y: list[float],
+    x_axis_label_td: str,
+    y_axis_label_td: str,
+    lines: list[float] = [],
 ) -> Axes:
     """
     Plot all total density profiles to ax
@@ -62,12 +67,14 @@ def plot_total_densities_to_ax(
             ax.plot(all_td_x, row.to_list())
     for value in lines:
         ax.axvline(value, color="k", linestyle="solid")
-    ax.set_xlabel(x_axis_text_td)
-    ax.set_ylabel(y_axis_text_td)
+    ax.set_xlabel(x_axis_label_td)
+    ax.set_ylabel(y_axis_label_td)
     return ax
 
 
-def plot_form_factors_to_ax(ax: Axes, sim_FF_df: pd.DataFrame, x_axis_text_ff: str, y_axis_text_ff: str) -> Axes:
+def plot_form_factors_to_ax(
+    ax: Axes, sim_FF_df: pd.DataFrame, x_axis_label_ff: str, y_axis_label_ff: str
+) -> Axes:
     """
     Plot all form factor profiles to ax
 
@@ -78,8 +85,8 @@ def plot_form_factors_to_ax(ax: Axes, sim_FF_df: pd.DataFrame, x_axis_text_ff: s
     """
     for index, row in sim_FF_df.iterrows():
         ax.plot(row.to_list())
-    ax.set_xlabel(x_axis_text_ff)
-    ax.set_ylabel(y_axis_text_ff)
+    ax.set_xlabel(x_axis_label_ff)
+    ax.set_ylabel(y_axis_label_ff)
     return ax
 
 
