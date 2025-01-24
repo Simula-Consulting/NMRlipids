@@ -236,46 +236,6 @@ def interpolate_with_GPR(
     ]
 
 
-def split_train_and_test(
-    sim_FF_df: pd.DataFrame,
-    sim_TD_y_df: pd.DataFrame,
-    system_ids: np.ndarray,
-    rng: np.random.Generator,
-    train_proportion: float,
-) -> tuple[
-    pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray
-]:
-    """
-    Split FF (input) and TD (output) pairs into train and test input and output pairs
-
-    :param sim_FF_df: Data frame containing form factors
-    :param sim_TD_y_df: Data frame containing total density profiles in the same order as sim_FF_df
-    :param system_ids: Index of system_ids for all 
-    :param rng: random number generator created and seeded at the beginning of the main script
-    :param train_proportion: Desired proportion of train cases
-
-    :return: 
-    train_input (FF), train_output (TD), test_input (FF), test_output (TD): Train and test data
-    train_ids, test_ids: system id indexes for the train and test sets
-    """
-    N_total = sim_FF_df.shape[0]
-    N_train = int(round(train_proportion * N_total, 0))
-    shuffle_indices = rng.permutation(N_total)
-    train_indices = shuffle_indices[0:N_train]
-    test_indices = shuffle_indices[N_train:]
-
-    # Use train and test indices to select the right input cases, and convert to numpy float values
-    train_input = sim_FF_df.loc[train_indices, :].astype(np.float32)
-    train_output = sim_TD_y_df.loc[train_indices, :].astype(np.float32)
-    train_ids = system_ids[train_indices]
-
-    test_input = sim_FF_df.loc[test_indices, :].astype(np.float32)
-    test_output = sim_TD_y_df.loc[test_indices, :].astype(np.float32)
-    test_ids = system_ids[test_indices]
-
-    return train_input, train_output, test_input, test_output, train_ids, test_ids
-
-
 def plot_training_trajectory(ax: Axes, history: object) -> Axes:
     """
     Plot the training trajectory
