@@ -250,10 +250,13 @@ def split_train_and_test(
 
     :param sim_FF_df: Data frame containing form factors
     :param sim_TD_y_df: Data frame containing total density profiles in the same order as sim_FF_df
+    :param system_ids: Index of system_ids for all 
     :param rng: random number generator created and seeded at the beginning of the main script
     :param train_proportion: Desired proportion of train cases
 
-    :return: train_input (FF), train_output (TD), test_input (FF), test_output (TD)
+    :return: 
+    train_input (FF), train_output (TD), test_input (FF), test_output (TD): Train and test data
+    train_ids, test_ids: system id indexes for the train and test sets
     """
     N_total = sim_FF_df.shape[0]
     N_train = int(round(train_proportion * N_total, 0))
