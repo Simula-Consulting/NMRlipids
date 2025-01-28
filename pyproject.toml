@@ -1,9 +1,10 @@
 [tool.poetry]
 name = "nmrlipids"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Tutorial for accessing NMR lipids databank through their API and training a neural network"
+authors = ["Even even@simula.no"]
 readme = "README.md"
+license = "Proprietary"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"

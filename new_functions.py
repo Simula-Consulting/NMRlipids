@@ -41,31 +41,30 @@ def getFormFactorAndTotalDensityPair(
     return FFsim, TDsim
 
 
-def getPOPC(
+def getEq_times(
     system: dict[str, Any], databankPath: str
 ) -> tuple[Optional[list[Any]], Optional[list[Any]]]:
     """
-    Returns POPC of the simulation
+    Returns eq_times of the simulation
 
     :param system: NMRlipids databank dictionary describing the simulation
     :param databankPath: Path to the databank
 
-    :return: POPC of the simulation
+    :return: eq_times of the simulation
     """
     databankPath = Path(databankPath)
     eq_times_path = (
         databankPath / "Data" / "Simulations" / system["path"] / "eq_times.json"
     )
 
-    # Load POPC file
+    # Load eq_times
     try:
         with open(eq_times_path, "r") as json_file:
             eq_times = json.load(json_file)
-            POPC = eq_times["POPC"]
     except Exception:
-        POPC = None
+        eq_times = None
 
-    return POPC
+    return eq_times
 
 
 def plot_total_densities_to_ax(
