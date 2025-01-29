@@ -284,7 +284,16 @@ def plot_training_trajectory(ax: Axes, history: object) -> Axes:
 
 
 def plot_absolute_deviation_to_ax(
-    fig: Figure, ax: Axes, x_values: np.ndarray, absolute_deviation: np.ndarray, x_axis_label_td: str, y_axis_label_td: str, title: str = "", height: float = 6, width: float = 8, label: str = ""
+    fig: Figure,
+    ax: Axes,
+    x_values: np.ndarray,
+    absolute_deviation: np.ndarray,
+    x_axis_label_td: str,
+    y_axis_label_td: str,
+    title: str = "",
+    height: float = 6,
+    width: float = 8,
+    label: str = "",
 ) -> Axes:
     """
     Plot absolute deviation to ax
@@ -294,10 +303,10 @@ def plot_absolute_deviation_to_ax(
 
     :return: ax object with absolute deviations plotted
     """
-    if len(absolute_deviation.shape) == 1: 
+    if len(absolute_deviation.shape) == 1:
         ax.plot(x_values, absolute_deviation, linestyle="-", label=label)
-    else: 
-        for residuals in absolute_deviation: 
+    else:
+        for residuals in absolute_deviation:
             ax.plot(x_values, residuals, color="k", linestyle="-", alpha=0.2)
     ax.set_xlabel(x_axis_label_td)
     ax.set_ylabel(y_axis_label_td)
