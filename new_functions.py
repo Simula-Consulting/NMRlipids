@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel
 from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from typing import Any, Optional
 from pathlib import Path
 
@@ -110,7 +111,7 @@ def plot_form_factors_to_ax(
     :return: ax object with form factors plotted
     """
     for index, row in sim_FF_df.iterrows():
-        ax.plot(row.to_list())
+        ax.plot(row.to_list(), linewidth=0.5)
     ax.set_xlabel(x_axis_label_ff)
     ax.set_ylabel(y_axis_label_ff)
     return ax
@@ -271,7 +272,39 @@ def plot_training_trajectory(ax: Axes, history: object) -> Axes:
 
     :return: ax object with training history plotted
     """
-    ax.plot(history.history["loss"], color="green", label="Training loss")
-    ax.plot(history.history["val_loss"], color="orange", label="Validation loss")
+    ax.plot(history["loss"], color="green", label="Training loss")
+    if "val_loss" in history:
+        ax.plot(history["val_loss"], color="orange", label="Validation loss")
+    ax.legend()
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Loss")
+    ax.set_title("Training History (Final Re-Fit)")
     ax.legend()
     return ax
+
+
+def plot_absolute_deviation_to_ax(
+    fig: Figure, ax: Axes, x_values: np.ndarray, absolute_deviation: np.ndarray, x_axis_label_td: str, y_axis_label_td: str, title: str = "", height: float = 6, width: float = 8, label: str = ""
+) -> Axes:
+    """
+    Plot absolute deviation to ax
+
+    :param ax: Axes object to plot on
+    :param absolute_deviation: Absolute deviation in total density
+
+    :return: ax object with absolute deviations plotted
+    """
+    if len(absolute_deviation.shape) == 1: 
+        ax.plot(x_values, absolute_deviation, linestyle="-", label=label)
+    else: 
+        for residuals in absolute_deviation: 
+            ax.plot(x_values, residuals, color="k", linestyle="-", alpha=0.2)
+    ax.set_xlabel(x_axis_label_td)
+    ax.set_ylabel(y_axis_label_td)
+    fig.set_figheight(height)
+    fig.set_figwidth(width)
+    ax.set_ylim(bottom=0)
+    plt.title(title)
+    plt.legend()
+    plt.tight_layout()
+    return fig, ax

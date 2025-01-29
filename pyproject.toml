@@ -2,7 +2,7 @@
 name = "nmrlipids"
 version = "0.1.0"
 description = "Tutorial for accessing NMR lipids databank through their API and training a neural network"
-authors = ["Even even@simula.no"]
+authors = ["Even Moa Myklebust <even@simula.no>"]
 readme = "README.md"
 license = "Proprietary"
 
@@ -14,9 +14,10 @@ matplotlib = "^3.9.2"
 tqdm = "^4.67.0"
 pyyaml = "^6.0.2"
 mdanalysis = "^2.7.0"
-scikit-learn = "^1.5.2"
+scikit-learn = ">=1.5.2,<1.5.3"
 ipywidgets = "^8.1.5"
 pathlib = "^1.0.1"
+scikeras = "^0.13.0"
 
 
 [tool.poetry.group.dev.dependencies]
