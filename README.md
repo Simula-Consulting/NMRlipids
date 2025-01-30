@@ -1,8 +1,8 @@
 # Tutorial showing how a neural net can be trained to predict total densities from form factors with the NMR lipids database
 
 The notebook step by step: 
-* Initialize the NMR lipids databank
-* Gather all available form factors and total densities in data frames
-* Preprocess the data to deal with different dimensions due to different experimental setups
-* Split data into a train and a test set
-* Train and evaluate a neural net that predicts total densities from form factors
+1) Download the data using the [NMR lipids API](https://nmrlipids.github.io/databankLibrary.html).  
+2) Explore the data, and preprocess the data for the machine learning pipeline.  
+3) Split data into train and test sets.
+4) Implement different neural networks and perform hyperparameter tuning
+5) Train and evaluate the performance of the neural networks. 
