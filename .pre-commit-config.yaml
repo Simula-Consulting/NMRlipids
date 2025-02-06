@@ -7,11 +7,11 @@ repos:
         stages: [pre-commit]
         language: system
         entry: poetry run ruff check
-        types: [python]
+        types: [python, jupyter]
       
       - id: ruff
         name: ruff-format
         stages: [pre-commit]
         language: system
         entry: poetry run ruff format
-        types: [python]
+        types: [python, jupyter]
